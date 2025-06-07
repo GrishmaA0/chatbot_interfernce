@@ -1,65 +1,66 @@
 import streamlit as st
-import openai
 
-# 🔐 Set your OpenAI API key
-openai.api_key = "your-openai-api-key"  # Replace this with your actual API key
+# 🧠 Smarter chatbot logic
+def simple_bot_response(user_input):
+ user_input = user_input.lower()
 
-# 🎨 Optional basic styling
-st.markdown("""
-    <style>
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+ if "hello" in user_input or "hi" in user_input:
+ return "👋 Hi there! How can I help you today?"
+ elif "how are you" in user_input:
+ return "😊 I'm doing great! Hope you're well too."
+ elif "your name" in user_input:
+ return "🤖 I'm a logic-based chatbot created with Streamlit!"
+ elif "what can you do" in user_input or "help" in user_input:
+ return "📚 I can answer greetings, tell you my name, chat with you, and more!"
+ elif "bye" in user_input or "goodbye" in user_input:
+ return "👋 Bye! Have a great day ahead!"
+ elif "thanks" in user_input or "thank you" in user_input:
+ return "🙏 You're welcome!"
+ elif "joke" in user_input:
+ return "😂 Why did the computer get cold? Because it left its Windows open!"
+ elif "who made you" in user_input:
+ return "🛠️ I was made by someone learning Streamlit with love!"
+ else:
+ return "🤔 I'm not sure how to respond to that. Try 'joke', 'hello', 'bye', or 'help'."
 
-# 🏷️ Title and Clear Chat button
-st.title("🤖 AI Chatbot")
+# 🎨 App UI
+st.set_page_config(page_title="Simple Chatbot", page_icon="🤖")
+st.title("🤖 Simple Chatbot (No API Required)")
+st.caption("This chatbot uses rule-based logic and works fully offline!")
 
-if st.button("🧹 Clear Chat"):
-    st.session_state.messages = []
-    st.experimental_rerun()
+# 🧠 Chat history
+if "chat_history" not in st.session_state:
+ st.session_state.chat_history = []
 
-# 🧠 Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# 🧹 Clear chat button
+st.sidebar.button("🧹 Clear Chat", on_click=lambda: st.session_state.chat_history.clear(), key="clear_chat")
 
-# 🙋 Greeting if first load
-if not st.session_state.messages:
-    st.markdown("👋 **Hi! I'm your chatbot. How can I help you today?**")
+# 🎯 Optional quick buttons
+st.markdown("### 👉 Quick Questions")
+col1, col2, col3 = st.columns(3)
+with col1:
+ if st.button("Tell me a joke 🤣", key="joke"):
+ st.session_state.chat_history.append(("user", "Tell me a joke"))
+ st.session_state.chat_history.append(("bot", simple_bot_response("Tell me a joke")))
+with col2:
+ if st.button("What's your name? 🤖", key="name"):
+ st.session_state.chat_history.append(("user", "What is your name?"))
+ st.session_state.chat_history.append(("bot", simple_bot_response("What is your name?")))
+with col3:
+ if st.button("Say hi 👋", key="sayhi"):
+ st.session_state.chat_history.append(("user", "Hi"))
+ st.session_state.chat_history.append(("bot", simple_bot_response("Hi")))
 
-# 🧠 Get bot response using OpenAI
-def get_bot_response(user_message):
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # Use "gpt-4" if you have access
-        messages=[
-            {"role": "system", "content": "You are a professional and friendly assistant."},
-            *[
-                {"role": msg["role"], "content": msg["text"]}
-                for msg in st.session_state.messages
-            ],
-            {"role": "user", "content": user_message}
-        ]
-    )
-    return response.choices[0].message.content
+# 💬 Chat input
+user_input = st.chat_input("Type your message here...", key="chat_input")
 
-# 📥 Chat input field
-user_input = st.chat_input("Type your message here...")
+# 🧠 Process chat input
+if user_input:
+ st.session_state.chat_history.append(("user", user_input))
+ response = simple_bot_response(user_input)
+ st.session_state.chat_history.append(("bot", response))
 
-# ✅ Input validation and processing
-if user_input and user_input.strip() != "" and len(user_input) < 500:
-    # Add user message
-    st.session_state.messages.append({"role": "user", "text": user_input})
-
-    # Spinner while thinking
-    with st.spinner("🤔 Thinking..."):
-        bot_reply = get_bot_response(user_input)
-        st.session_state.messages.append({"role": "assistant", "text": bot_reply})
-elif user_input:
-    st.warning("⚠️ Please enter a valid message (not empty or too long).")
-
-# 💬 Display full chat history with avatars
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "🤖"):
-        st.markdown(msg["text"])
+# 💬 Display chat history
+for sender, msg in st.session_state.chat_history:
+ with st.chat_message("user" if sender == "user" else "assistant"):
+ st.markdown(msg)
